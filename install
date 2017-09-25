@@ -1,0 +1,3 @@
+#!/bin/bash
+cp -f askme-radius /opt/askme/ 
+cp -f askme.conf /etc/askme.conf
