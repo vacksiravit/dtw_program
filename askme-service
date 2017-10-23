@@ -1,0 +1,87 @@
+#!/bin/bash
+RED=$(tput setaf 1)
+GREEN=$(tput setaf 2)
+YELLOW=$(tput setaf 3)
+NORMAL=$(tput sgr0)
+SCREEN_W=$(tput cols)
+SCREEN_H=$(tput lines)
+col=$SCREEN_W
+argv0=$0
+argv1=$1
+argv2=$2
+getversion=$(head -9 /etc/askme.conf)
+
+start() {
+	if [ $(ps -aux |grep askme-radius |grep -v grep |wc -l) -gt 0 ]; then
+		printf '%s%s%s\n' "$GREEN" "$getversion" "$NORMAL"
+		printf '%s%s%s\n' "$YELLOW" "[AskMe - API has already running...]" "$NORMAL"
+	else
+		/etc/init.d/askme-radius &
+		printf '%s%s%s\n' "$GREEN" "$getversion" "$NORMAL"
+		printf '%s%s%s\n' "$GREEN" "[AskMe - API has already started...]" "$NORMAL"
+	fi
+}
+stop() {
+	pkill askme-radius
+	printf '%s%s%s\n' "$RED" "[AskMe - API has stoped!]" "$NORMAL"
+}
+status() {
+	if [ $(ps -aux |grep askme-radius |grep -v grep |wc -l) -gt 0 ]; then
+		printf '%s%s%s\n' "$GREEN" "$getversion" "$NORMAL"
+		printf '%s%s%s\n' "$GREEN" "[AskMe - API is running...]" "$NORMAL"
+	else
+		printf '%s%s%s\n' "$GREEN" "$getversion" "$NORMAL"
+		printf '%s%s%s\n' "$RED" "[AskMe - API is not running!]" "$NORMAL"
+	fi
+
+}
+
+monitor() {
+	printf '%s%s%s\n' "$GREEN" "$getversion" "$NORMAL"
+	logfile=$(date +%Y)-$(date +%b)-$(date +%d).log
+	TMP=$(sed -s '=' /etc/askme.conf |grep LOG_PATH |sed -e  "/#/d" | cut -d '='  -f 2 | sed -e 's/^[[:space:]]*//')
+	tail -f $TMP$logfile
+}
+
+view() {
+	DB_SERVER=$(sed -s '=' /etc/askme.conf |grep DB_SERVER |sed -e  "/#/d" | cut -d '='  -f 2 | sed -e 's/^[[:space:]]*//')
+	DB_USER=$(sed -s '=' /etc/askme.conf |grep DB_USER |sed -e  "/#/d" | cut -d '='  -f 2 | sed -e 's/^[[:space:]]*//')
+	DB_PASS=$(sed -s '=' /etc/askme.conf |grep DB_PASS |sed -e  "/#/d" | cut -d '='  -f 2 | sed -e 's/^[[:space:]]*//')
+	DB_NAME=$(sed -s '=' /etc/askme.conf |grep DB_NAME |sed -e  "/#/d" | cut -d '='  -f 2 | sed -e 's/^[[:space:]]*//')
+	TB_NAME=$(sed -s '=' /etc/askme.conf |grep TB_NAME |sed -e  "/#/d" | cut -d '='  -f 2 | sed -e 's/^[[:space:]]*//')
+	
+	printf '%s\n' "$GREEN"
+	mysql -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" <<< "SELECT "*" from "$TB_NAME" where username like '$argv2';"
+	printf '%s\n' "$NORMAL"
+
+}
+case "$1" in
+	start )
+		start
+		;;
+	stop )  
+		stop
+		;;
+	restart )
+		stop
+		start
+		;;
+	status )
+		status
+		;;
+	monitor )
+		monitor
+		;;
+	view )
+		if [ -z "$2" ] ; then
+			printf '%s%s%s\n' "$RED" "[Please Insert Room number ]" "$NORMAL"
+			printf '%s%s%s\n\n' "$RED" "Example : service askme-service view 5001" "$NORMAL"
+		else 
+			view
+		fi
+		;;
+	*)
+		echo "Usage : $0 {start|stop|restart|status|monitor|view}"
+esac
+exit 0
+
