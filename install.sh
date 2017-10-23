@@ -67,20 +67,7 @@ install()
 		fi
 		
 		chmod +x ./askme-radius	
-		cp -rf ./askme-radius /opt/askme
-		printf '%s%s%s\n' "$GREEN" "Install Software successfull." "$NORMAL"
-		ln -s /opt/askme/askme-radius /etc/init.d/
-		printf '%s%s%s\n' "$GREEN" "Make Link file successfull." "$NORMAL"
-	
-		cp -rf ./askme.conf /etc/
-		printf '%s%s%s\n' "$GREEN" "Install configuration successfull." "$NORMAL"
-
-		chmod +x ./askme-service
-
-		cp -f ./askme-service /etc/init.d/
-		printf '%s%s%s\n' "$GREEN" "Install autorun successfull." "$NORMAL"	
-		
-		chmod -x install.sh
+		chmod -x $0
 	else
 		printf '%s%s%s\n' "$RED" "Install Software Fail." "$NORMAL"
 	fi
